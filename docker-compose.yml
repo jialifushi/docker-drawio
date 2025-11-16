@@ -1,24 +1,14 @@
-#This compose file adds draw.io to your stack
-version: '3.5'
+version: '3.8'
+
 services:
   drawio:
-    image: jgraph/drawio
-    container_name: drawio
-    restart: unless-stopped
+    # 使用 main 目录下的 Dockerfile 进行构建
+    build: ./main
+    container_name: drawio-with-auth
     ports:
-      - 8080:8080
-      - 8443:8443
+      - "8080:8080"
+      - "8443:8443"
     environment:
-      PUBLIC_DNS: domain
-      ORGANISATION_UNIT: unit
-      ORGANISATION: org
-      CITY: city
-      STATE: state
-      COUNTRY_CODE: country
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://domain:8080 || exit 1"]
-      interval: 1m30s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
-
+      # 在这里设置你的访问密码
+      - DRAWIO_ACCESS_CODE=please_change_me
+    restart: unless-stopped

@@ -119,6 +119,83 @@ else
     echo -n "${DRAWIO_GITLAB_SECRET}" > $CATALINA_HOME/webapps/draw/WEB-INF/gitlab_client_secret
 fi
 
+
+# Custom access code authentication
+if [[ -n "${DRAWIO_ACCESS_CODE}" ]]; then
+    echo "console.log('Access code authentication is enabled.');" >> $CATALINA_HOME/webapps/draw/js/PreConfig.js
+    # Using a here-document to append the JS code
+    cat <<EOF >> $CATALINA_HOME/webapps/draw/js/PreConfig.js
+
+(function() {
+    const code = '${DRAWIO_ACCESS_CODE}';
+    
+    // If already authenticated in this session, do nothing.
+    if (sessionStorage.getItem('drawio_authenticated') === 'true') {
+        return;
+    }
+
+    // Function to show the auth overlay
+    function showAuthOverlay() {
+        // Prevents the function from running before the body is loaded
+        if (!document.body) {
+            window.addEventListener('DOMContentLoaded', showAuthOverlay);
+            return;
+        }
+
+        const overlay = document.createElement('div');
+        overlay.id = 'auth-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+        overlay.style.zIndex = '10000';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+
+        overlay.innerHTML = \`
+            <div style="font-family: Arial, sans-serif; text-align: center; background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                <h3 style="margin-top: 0; font-size: 24px; color: #333;">在线自由制图</h3>
+                <p style="color: #666; margin-bottom: 20px;">请输入访问码进入</p>
+                <input type="password" id="access_code_input" style="padding: 10px; width: 200px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px;" />
+                <button id="access_code_button" style="padding: 10px 20px; margin-left: 10px; border: none; border-radius: 4px; background-color: #007bff; color: white; font-size: 16px; cursor: pointer;">进入</button>
+                <p id="access_code_error" style="color: red; margin-top: 15px; height: 20px;"></p>
+            </div>
+        \`;
+        document.body.appendChild(overlay);
+
+        const input = document.getElementById('access_code_input');
+        const button = document.getElementById('access_code_button');
+        const errorP = document.getElementById('access_code_error');
+
+        const attemptLogin = function() {
+            if (input.value === code) {
+                sessionStorage.setItem('drawio_authenticated', 'true');
+                overlay.remove();
+            } else {
+                errorP.innerText = 'Incorrect access code.';
+                input.value = '';
+                input.focus();
+            }
+        };
+
+        button.onclick = attemptLogin;
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                attemptLogin();
+            }
+        });
+        input.focus();
+    }
+
+    showAuthOverlay();
+})();
+EOF
+fi
+# End of custom access code authentication
+
 cat $CATALINA_HOME/webapps/draw/js/PreConfig.js
 
 echo "Init PostConfig.js"

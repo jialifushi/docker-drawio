@@ -10,6 +10,8 @@ RUN apt-get update -y && \
 
 RUN cd /tmp && \
     git clone --depth 1 https://github.com/jgraph/drawio.git && \
+    sed -i "s|this.put('getDesktop', new Action(mxResources.get('getDesktop') + '...', function() { editorUi.openLink('https://get.diagrams.net'); }));|this.put('getDesktop', new Action('Get Ebook to read relax', function() { editorUi.openLink('https://hezhuangbook.789168.xyz/'); }));|g" /tmp/drawio/src/main/webapp/js/diagramly/Menus.js && \
+    sed -i "s|this.put('support', new Action(mxResources.get('support'), function() { editorUi.openLink('https://github.com/jgraph/drawio/wiki/Getting-Support'); }));|this.put('support', new Action('Get News to read relax', function() { editorUi.openLink('https://news.789168.xyz/'); }));|g" /tmp/drawio/src/main/webapp/js/diagramly/Menus.js && \
     cd /tmp/drawio/etc/build/ && \
     ant war
 
